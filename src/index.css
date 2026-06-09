@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-green: #2b6c00;
+  --color-on-primary-green: #ffffff;
+  --color-primary-container-green: #58cc02;
+  --color-on-primary-container-green: #1e5000;
+  
+  --color-secondary-blue: #006590;
+  --color-on-secondary-blue: #ffffff;
+  --color-secondary-container-blue: #2fb8ff;
+  --color-on-secondary-container-blue: #004666;
+  
+  --color-tertiary-gold: #755b00;
+  --color-on-tertiary-gold: #ffffff;
+  --color-tertiary-container-gold: #ddad00;
+  --color-on-tertiary-container-gold: #574300;
+  
+  --color-bg-light: #f9f9f9;
+  --color-text-dark: #1a1c1c;
+  --color-text-muted: #3f4a36;
+  
+  --color-border-custom: #becbb1;
+  
+  --color-surface-lowest: #ffffff;
+  --color-surface-low: #f3f3f3;
+  --color-surface-normal: #eeeeee;
+  --color-surface-high: #e8e8e8;
+  --color-surface-highest: #e2e2e2;
+  
+  --border-radius-custom-sm: 0.25rem;
+  --border-radius-custom-default: 0.5rem;
+  --border-radius-custom-md: 0.75rem;
+  --border-radius-custom-lg: 1rem;
+  --border-radius-custom-xl: 1.5rem;
+  --border-radius-custom-full: 9999px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+.active-nav-item {
+  background-color: #58cc02;
+  color: #1e5000;
+}
+
+.lesson-trail::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 24px;
+  background-color: #becbb1;
+  transform: translateX(-50%);
+}
+
+.lesson-trail:last-child::after {
+  display: none;
+}
+
+.pressable-btn {
+  box-shadow: 0 4px 0 #1f5100;
+  transition: all 0.1s;
+}
+
+.pressable-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #1f5100;
+}
+
+.btn-press:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.btn-primary-shadow {
+  box-shadow: 0 4px 0 0 #1e5000;
+}
+
+.bento-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 8px 24px rgba(0,0,0,0.1);
+}
+

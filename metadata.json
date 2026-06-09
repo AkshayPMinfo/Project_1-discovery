@@ -1,0 +1,6 @@
+{
+  "name": "PMprepares - Discovery Platform",
+  "description": "Interactive learning path dashboard for aspiring Product Managers to master product discovery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
