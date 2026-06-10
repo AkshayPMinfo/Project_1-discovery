@@ -79,12 +79,24 @@ export default function App() {
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>('foundations');
   const [searchText, setSearchText] = useState<string>('');
   
+  // Interactive Beginner Tour variables
+  const [beginnerTourOpen, setBeginnerTourOpen] = useState<boolean>(() => {
+    return getInitialProgress('beginner_tour_dismissed', 'false') === 'false';
+  });
+  const [tourStep, setTourStep] = useState<number>(0);
+
+  const dismissTour = () => {
+    setBeginnerTourOpen(false);
+    localStorage.setItem('pmprep_beginner_tour_dismissed', 'true');
+  };
+  
   // Interactive Modals
   const [currentReadingArticle, setCurrentReadingArticle] = useState<Article | null>(null);
   const [currentWatchingVideo, setCurrentWatchingVideo] = useState<Video | null>(null);
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
   const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
   const [isCelebrationOpen, setIsCelebrationOpen] = useState<boolean>(false);
+  const [showXpClaimedToast, setShowXpClaimedToast] = useState<boolean>(false);
   
   // Notification Toast
   const [toast, setToast] = useState<{ message: string; sub: string } | null>(null);
@@ -110,7 +122,7 @@ export default function App() {
       author: 'You (First Timer!)',
       role: 'Active Learner',
       avatar: 'Y',
-      body: 'This is my first website tutorial ever! I just clicked my first lesson checkbox and saw my XP score increase! It feels amazing!',
+      body: 'This is my first website tutorial ever! I just clicked my first concept checkbox and saw my XP score increase! It feels amazing!',
       likes: 8,
       replies: 1,
       liked: true,
@@ -468,7 +480,7 @@ export default function App() {
       setXp(prev => prev + lesson.xpValue);
       setXpToday(prev => prev + lesson.xpValue);
       triggerNotification(
-        `🎉 Lesson Complete: +${lesson.xpValue} XP!`,
+        `🎉 Concept Complete: +${lesson.xpValue} XP!`,
         `You checked off "${lesson.title}" successfully.`
       );
       
@@ -486,7 +498,7 @@ export default function App() {
       setXp(prev => prev - lesson.xpValue);
       setXpToday(prev => Math.max(0, prev - lesson.xpValue));
       triggerNotification(
-        "✏️ Lesson Reset",
+        "✏️ Concept Reset",
         `"${lesson.title}" marked as incomplete.`
       );
     }
@@ -528,12 +540,27 @@ export default function App() {
 
   // Dynamic Module Final claiming function
   const handleClaimModuleBonus = (moduleId: string) => {
-    setIsCelebrationOpen(true);
     if (!claimedModuleBonuses.includes(moduleId)) {
       setClaimedModuleBonuses([...claimedModuleBonuses, moduleId]);
       setXp(prev => prev + 30);
       setXpToday(prev => prev + 30);
-      triggerNotification("🎉 Chapter Completed!", "You received +30 Bonus XP on the Leaderboard!");
+
+      // Auto-complete all lessons, videos, and articles in this module so the status changes to "Completed"
+      const targetMod = initialModules.find(m => m.id === moduleId);
+      if (targetMod) {
+        const lessonIds = targetMod.lessons.map(l => l.id);
+        setCompletedLessons(prev => Array.from(new Set([...prev, ...lessonIds])));
+      }
+      const videoIds = videosData.filter(v => v.moduleId === moduleId).map(v => v.id);
+      setCompletedVideos(prev => Array.from(new Set([...prev, ...videoIds])));
+      const articleIds = articlesData.filter(a => a.moduleId === moduleId).map(a => a.id);
+      setCompletedArticles(prev => Array.from(new Set([...prev, ...articleIds])));
+      
+      // Replaced popup with a simple small notification on the right side bottom for 4 seconds
+      setShowXpClaimedToast(true);
+      const timer = setTimeout(() => {
+        setShowXpClaimedToast(false);
+      }, 4000);
     }
   };
 
@@ -637,7 +664,10 @@ export default function App() {
         <div className="max-w-[1400px] mx-auto flex justify-between items-center gap-4">
           
           {/* Logo brand strictly for first screen on mobile / top bar on web */}
-          <div className="flex items-center gap-2">
+          <button 
+            onClick={() => { setActiveTab('learn'); setSearchText(''); }}
+            className="flex items-center gap-2 text-left cursor-pointer hover:opacity-85 transition-opacity focus:outline-none"
+          >
             <div className="w-10 h-10 bg-[#58cc02] rounded-xl flex items-center justify-center text-[#1e5000] md:hidden shadow-sm">
               <BookOpen className="w-6 h-6" />
             </div>
@@ -645,7 +675,7 @@ export default function App() {
               <h1 className="font-black text-lg text-[#2b6c00] leading-none">PMprepares</h1>
               <p className="text-[9px] text-[#3f4a36] tracking-widest uppercase font-bold">Discovery Platform</p>
             </div>
-          </div>
+          </button>
 
           {/* Intuitive plain search bar */}
           <div className="relative flex-1 max-w-md hidden md:block">
@@ -702,15 +732,18 @@ export default function App() {
         <aside className="hidden md:flex flex-col w-[260px] border-r border-[#becbb1] bg-white p-5 gap-6 shrink-0 h-[calc(100vh-69px)] sticky top-[69px]">
           
           {/* Brand Identity / Header strictly matching Screen 1 details */}
-          <div className="px-2">
-            <h1 className="font-extrabold text-2xl text-[#2b6c00] flex items-center gap-2">
+          <button 
+            onClick={() => { setActiveTab('learn'); setSearchText(''); }}
+            className="px-2 text-left hover:opacity-85 transition-opacity cursor-pointer group focus:outline-none"
+          >
+            <h1 className="font-extrabold text-2xl text-[#2b6c00] flex items-center gap-2 group-hover:text-[#1e5000] transition-colors">
               <span className="material-symbols-outlined text-4xl text-[#58cc02]" style={{ fontVariationSettings: "'FILL' 1" }}>
                 potted_plant
               </span>
               PMprepares
             </h1>
             <p className="font-bold text-[10px] uppercase tracking-widest text-[#3f4a36] opacity-75 mt-0.5">Discovery Platform</p>
-          </div>
+          </button>
 
           {/* Simple clear navigation list */}
           <nav className="flex flex-col gap-1.5 flex-1">
@@ -728,7 +761,7 @@ export default function App() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-left ${activeTab === 'path' ? 'bg-[#58cc02] text-[#1e5000] shadow-sm' : 'text-[#3f4a36] hover:bg-[#f3f3f3] hover:text-[#2b6c00]'}`}
             >
               <Map className="w-5 h-5" />
-              <span className="text-sm">My Path (active lesson)</span>
+              <span className="text-sm">My Path (active concept)</span>
             </button>
 
             <button 
@@ -736,7 +769,7 @@ export default function App() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-left ${activeTab === 'lessons' ? 'bg-[#58cc02] text-[#1e5000] shadow-sm' : 'text-[#3f4a36] hover:bg-[#f3f3f3] hover:text-[#2b6c00]'}`}
             >
               <BookOpen className="w-5 h-5" />
-              <span className="text-sm">Find Lessons</span>
+              <span className="text-sm">Find Concepts</span>
             </button>
 
             <button 
@@ -808,13 +841,66 @@ export default function App() {
                     <Layers className="w-4 h-4 text-[#2b6c00]" /> {initialModules.length} Custom Modules
                   </span>
                   <span className="flex items-center gap-1.5 bg-[#eeeeee] px-3 py-1 rounded-full text-xs">
-                    <BookOpen className="w-4 h-4 text-[#2b6c00]" /> {initialModules.reduce((acc, mod) => acc + mod.lessons.length, 0)} Key Lessons
+                    <BookOpen className="w-4 h-4 text-[#2b6c00]" /> {initialModules.reduce((acc, mod) => acc + mod.lessons.length, 0)} Key Concepts
                   </span>
                   <span className="px-2.5 py-1 bg-[#ddad00]/25 text-[#1e5000] rounded text-[10px] font-black uppercase tracking-wider">
                     Free forever for beginners
                   </span>
                 </div>
               </div>
+
+              {/* Beginner Tour Step 0 */}
+              {beginnerTourOpen && tourStep === 0 ? (
+                <div className="bg-gradient-to-br from-indigo-50 via-white to-sky-50 border-2 border-indigo-400 rounded-2xl p-5 md:p-6 shadow-md transition-all relative overflow-hidden animate-pulse-subtle">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3"></div>
+                  <div className="absolute -top-3 left-6 px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
+                    Beginner Guide: Step 1 of 4
+                  </div>
+                  <div className="flex gap-4 items-start mt-2">
+                    <span className="text-3xl filter drop-shadow">🚀</span>
+                    <div className="space-y-3 flex-1">
+                      <h4 className="font-extrabold text-indigo-950 text-base md:text-lg">
+                        Welcome, Future Product Manager! Let's get started 👋
+                      </h4>
+                      <p className="text-xs md:text-sm text-indigo-900/90 font-medium leading-relaxed max-w-3xl">
+                        Product discovery is the secret weapon of elite software design teams. To help you build ultimate confidence, we prepared step-by-step guidance! <strong className="text-indigo-950 font-extrabold">Chapter 1: Discovery Foundations</strong> is your perfect starting point.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button 
+                          onClick={() => {
+                            setActiveModuleId('foundations');
+                            setActiveTab('path');
+                            setTourStep(1);
+                          }} 
+                          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all shadow hover:shadow-md cursor-pointer flex items-center gap-1.5"
+                        >
+                          <span>Open Chapter 1 & Continue</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={dismissTour} 
+                          className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 cursor-pointer"
+                        >
+                          Skip Guide
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => {
+                      setBeginnerTourOpen(true);
+                      setTourStep(0);
+                    }}
+                    className="flex items-center gap-2 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 text-indigo-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Need Help? Launch Quick Rookie Tour</span>
+                  </button>
+                </div>
+              )}
 
               {/* List of Modules */}
               <div className="space-y-4">
@@ -823,7 +909,7 @@ export default function App() {
                 {initialModules.map((mod, index) => {
                   const completedCount = mod.lessons.filter(l => completedLessons.includes(l.id)).length;
                   const totalCount = mod.lessons.length;
-                  const percent = Math.round((completedCount / totalCount) * 100);
+                  const percent = claimedModuleBonuses.includes(mod.id) ? 100 : Math.round((completedCount / totalCount) * 100);
 
                   return (
                     <div 
@@ -831,7 +917,6 @@ export default function App() {
                       onClick={() => {
                         setActiveModuleId(mod.id);
                         setActiveTab('path');
-                        triggerNotification(`🚀 Chapter Opened: ${mod.title}`, "Explore complete topic guides, video masterclasses, and real-world articles!");
                       }}
                       className="bg-white rounded-2xl border-2 border-[#becbb1] hover:border-[#2b6c00] hover:shadow-md transition-all duration-300 p-5 cursor-pointer group flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
                     >
@@ -855,7 +940,7 @@ export default function App() {
                               Chapter {index + 1}
                             </span>
                             {percent === 100 ? (
-                              <span className="text-[10px] bg-[#2b6c00] text-white font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                              <span className="text-[10px] bg-indigo-600 text-white font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
                                 Complete
                               </span>
                             ) : percent > 0 ? (
@@ -868,7 +953,7 @@ export default function App() {
                               </span>
                             )}
                             <span className="text-xs text-[#3f4a36] font-bold">
-                              • {mod.lessons.length} Lessons
+                              • {mod.lessons.length} Concepts
                             </span>
                           </div>
                           
@@ -883,26 +968,6 @@ export default function App() {
 
                       {/* Right-side button and progress */}
                       <div className="w-full md:w-auto shrink-0 flex flex-col items-end gap-3 self-stretch justify-center pt-4 md:pt-0 border-t md:border-t-0 border-[#becbb1]">
-                        {/* Progress bar visual */}
-                        <div className="w-full md:w-44 text-right">
-                          <div className="flex justify-between text-[11px] font-extrabold text-[#3f4a36] mb-1">
-                            <span>Syllabus Progress</span>
-                            <span>{percent}%</span>
-                          </div>
-                          <div className="w-full bg-[#eeeeee] rounded-full h-2.5 overflow-hidden border border-slate-200">
-                            <div 
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                mod.color === 'primary' ? 'bg-[#58cc02]' :
-                                mod.color === 'secondary' ? 'bg-[#2fb8ff]' :
-                                mod.color === 'tertiary' ? 'bg-amber-500' :
-                                mod.color === 'quaternary' ? 'bg-purple-500' :
-                                'bg-[#58cc02]'
-                              }`}
-                              style={{ width: `${percent}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
                         {/* Button call to action */}
                         <button className="w-full md:w-auto px-5 py-2.5 bg-[#2b6c00] group-hover:bg-[#1e5000] text-white text-xs font-black rounded-xl transition-all shadow-md active:translate-y-0.5 flex items-center justify-center gap-1.5 uppercase">
                           <span>Open Chapter Guide</span>
@@ -986,6 +1051,50 @@ export default function App() {
                   <ChevronRight className="w-3.5 h-3.5 text-[#3f4a36]" />
                   <span className="text-[#2b6c00]">{activeModule.title}</span>
                 </nav>
+
+                {/* Beginner Tour Step 1 */}
+                {beginnerTourOpen && tourStep === 1 && activeModule.id === 'foundations' && (
+                  <div className="bg-gradient-to-br from-indigo-50 via-white to-sky-50 border-2 border-indigo-400 rounded-2xl p-5 md:p-6 shadow-md relative overflow-hidden animate-fade-in">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3"></div>
+                    <div className="absolute -top-3 left-6 px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
+                      Beginner Guide: Step 2 of 4
+                    </div>
+                    <div className="flex gap-4 items-start mt-2">
+                      <span className="text-3xl filter drop-shadow">📖</span>
+                      <div className="space-y-2 flex-1">
+                        <h4 className="font-extrabold text-indigo-950 text-base md:text-lg">
+                          Nice work! Let's explore the Textbook Guides 💡
+                        </h4>
+                        <p className="text-xs md:text-sm text-indigo-900/90 font-medium leading-relaxed">
+                          This section contains your core educational readings. Take a moment to read topic guides such as <strong className="text-indigo-950">"What is Product Discovery?"</strong>, <strong className="text-indigo-950">"Discovery vs Delivery"</strong>, and <strong className="text-indigo-950">"The Double Diamond"</strong> below! It helps to understand these master concepts before tackling practice tasks.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 pt-2">
+                          <button 
+                            onClick={() => setTourStep(2)} 
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-lg transition-all shadow cursor-pointer text-center"
+                          >
+                            Next: Check off Concepts Checklist ✏️
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setActiveTab('learn');
+                              setTourStep(0);
+                            }} 
+                            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all border border-slate-200 cursor-pointer"
+                          >
+                            Back
+                          </button>
+                          <button 
+                            onClick={dismissTour} 
+                            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-all cursor-pointer border border-transparent"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Restructured Active Module Textbook Flow */}
                 <section className="bg-white border border-[#becbb1] rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
@@ -1435,9 +1544,54 @@ export default function App() {
                     </div>
                     <div>
                       <h3 className="font-extrabold text-lg text-[#1a1c1c]">Chapter Syllabus Checklist</h3>
-                      <p className="text-xs text-[#3f4a36] font-medium">Click the circular checks to mark lessons complete as you progress, earning XP instantly!</p>
+                      <p className="text-xs text-[#3f4a36] font-medium">Click the circular checks to mark concepts complete as you progress, earning XP instantly!</p>
                     </div>
                   </div>
+
+                  {/* Beginner Tour Step 2 */}
+                  {beginnerTourOpen && tourStep === 2 && activeModule.id === 'foundations' && (
+                    <div className="bg-gradient-to-br from-indigo-50 via-white to-sky-50 border-2 border-indigo-400 rounded-2xl p-5 md:p-6 shadow-md relative overflow-hidden animate-fade-in my-3">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3"></div>
+                      <div className="absolute -top-3 left-6 px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
+                        Beginner Guide: Step 3 of 4
+                      </div>
+                      <div className="flex gap-4 items-start mt-2">
+                        <span className="text-3xl filter drop-shadow">✏️</span>
+                        <div className="space-y-2 flex-1">
+                          <h4 className="font-extrabold text-indigo-950 text-base md:text-lg">
+                            Step 3: Interactive Practice & Instant Scoring 🏆
+                          </h4>
+                          <p className="text-xs md:text-sm text-indigo-900/90 font-medium leading-relaxed">
+                            PM learning is all about habit-building! Click the circular checkboxes next to each concept below. Checking off a completed concept grants you <strong className="text-indigo-950 font-black">+20 XP</strong> instantly to boost your profile performance on the active list!
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <button 
+                              onClick={() => {
+                                setTourStep(3);
+                                // scroll gently to videos section
+                                document.getElementById('videos-section')?.scrollIntoView({ behavior: 'smooth' });
+                              }} 
+                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-lg transition-all shadow cursor-pointer text-center"
+                            >
+                              Next: View Media Rooms 📺
+                            </button>
+                            <button 
+                              onClick={() => setTourStep(1)} 
+                              className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all border border-slate-200 cursor-pointer"
+                            >
+                              Back
+                            </button>
+                            <button 
+                              onClick={dismissTour} 
+                              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-all cursor-pointer border border-transparent"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {activeModule.lessons.map((lesson) => {
@@ -1482,6 +1636,42 @@ export default function App() {
                     </div>
                     <h3 className="font-black text-xl text-[#1a1c1c]" id="videos-section">Videos summaries to Watch</h3>
                   </div>
+
+                  {/* Beginner Tour Step 3 */}
+                  {beginnerTourOpen && tourStep === 3 && activeModule.id === 'foundations' && (
+                    <div className="bg-gradient-to-br from-indigo-50 via-white to-sky-50 border-2 border-indigo-400 rounded-2xl p-5 md:p-6 shadow-md relative overflow-hidden animate-fade-in my-3">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3"></div>
+                      <div className="absolute -top-3 left-6 px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
+                        Beginner Guide: Step 4 of 4
+                      </div>
+                      <div className="flex gap-4 items-start mt-2">
+                        <span className="text-3xl filter drop-shadow">📺</span>
+                        <div className="space-y-3 flex-1">
+                          <h4 className="font-extrabold text-indigo-950 text-base md:text-lg">
+                            Step 4: Media Rooms & Active Case Studies 🗣️
+                          </h4>
+                          <p className="text-xs md:text-sm text-indigo-900/90 font-medium leading-relaxed">
+                            Watch immersive masterclass videos and interactive case study articles! Watching a session grants you <strong className="text-indigo-950 font-black">+20 XP</strong> while auxiliary articles reward you with custom trivia tests.
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <button 
+                              onClick={dismissTour} 
+                              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all shadow cursor-pointer text-center flex items-center gap-1.5"
+                            >
+                              <span>Finish Guide & Start Learning</span>
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => setTourStep(2)} 
+                              className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all border border-slate-200 cursor-pointer"
+                            >
+                              Back
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {activeModuleVideos.length === 0 ? (
                     <p className="text-xs text-[#3f4a36] italic bg-white p-4 rounded-2xl border border-dashed border-[#becbb1]">No customized video courses assigned to this chapter yet.</p>
@@ -1627,7 +1817,7 @@ export default function App() {
           {activeTab === 'lessons' && (
             <div className="space-y-6">
               <div className="pb-3 border-b border-[#becbb1]">
-                <h2 className="text-2xl font-black text-[#1a1c1c]">Lesson Exploration Registry</h2>
+                <h2 className="text-2xl font-black text-[#1a1c1c]">Concept Exploration Registry</h2>
                 <p className="text-xs text-[#3f4a36] font-medium mt-1">Here is a full list of all 11 topics and articles tailored for your first-time study experience. Type below to search instantly.</p>
               </div>
 
@@ -1678,7 +1868,7 @@ export default function App() {
                       <div>
                         <div className="flex justify-between items-start gap-2 mb-2">
                           <span className="text-[9px] bg-slate-100 text-slate-600 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                            {item.isArticle ? '📖 Article Study' : '💡 Course Lesson'}
+                            {item.isArticle ? '📖 Article Study' : '💡 Course Concept'}
                           </span>
                           <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
                             {item.duration} • +{item.xpValue} XP
@@ -1994,7 +2184,7 @@ export default function App() {
                         🌐 <strong>Local-First Sandbox Mode Enabled</strong>
                       </p>
                       <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                        Your study progress (XP, Streak, Completed Lessons) is backup-saved on this browser's local cache!
+                        Your study progress (XP, Streak, Completed Concepts) is backup-saved on this browser's local cache!
                       </p>
                       <p className="text-[11px] text-amber-900 leading-relaxed font-bold font-sans">
                         To activate cloud-sync authentication database backups, deploy to Vercel and supply your environment credentials.
@@ -2452,35 +2642,15 @@ export default function App() {
         </div>
       )}
 
-      {/* Interactive Celebration XP award modal */}
-      {isCelebrationOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white rounded-3xl border-2 border-[#becbb1] p-6 max-w-md w-full text-center space-y-5 shadow-2xl relative my-auto animate-bounce">
-            
-            <div className="text-5xl">🥳🎉🌟</div>
-            
-            <h3 className="text-2xl font-black text-[#2b6c00]">Outstanding Progress!</h3>
-            <p className="text-sm text-[#3f4a36] font-medium leading-relaxed">
-              Wonderful! You successfully claimed <strong>+30 Points (XP)</strong> for completing the path guide chapter on <strong>The Mom Test Framework</strong>.
-            </p>
-
-            <div className="bg-[#58cc02]/20 p-4 rounded-2xl border border-[#2b6c00]/40 text-center">
-              <span className="text-xs font-bold text-[#1e5000] uppercase block">Your New Leaderboard Score</span>
-              <span className="text-3xl font-black text-[#2b6c00] block mt-1">{xp} XP</span>
-              <span className="text-[10px] text-[#3f4a36] font-bold block mt-1">Status: Gold League Rank 3</span>
-            </div>
-
-            <button 
-              onClick={() => {
-                setIsCelebrationOpen(false);
-                setActiveTab('learn');
-                triggerNotification("🌟 Chapter Cleared!", "Guided course completed with honor.");
-              }}
-              className="w-full py-4 bg-[#2b6c00] hover:bg-[#1e5000] text-white font-extrabold text-sm rounded-xl transition-all shadow"
-            >
-              Back to Study Map (Learn)
-            </button>
-
+      {/* Interactive Celebration XP award replaced with bottom-right notification */}
+      {showXpClaimedToast && (
+        <div className="fixed bottom-6 right-6 z-[9999] bg-white text-[#1a1c1c] p-4 rounded-xl shadow-2xl border-l-4 border-[#2b6c00] max-w-sm flex items-start gap-3 animate-bounce">
+          <div className="w-8 h-8 rounded-full bg-[#58cc02]/20 flex items-center justify-center text-[#2b6c00] shrink-0">
+            <Sparkles className="w-5 h-5 animate-pulse" />
+          </div>
+          <div>
+            <h4 className="font-bold text-sm text-[#1a1c1c]">xp claimed</h4>
+            <p className="text-[10px] text-[#3f4a36] font-medium">+30 Practice bonus points added</p>
           </div>
         </div>
       )}
