@@ -34,9 +34,11 @@ import {
   Info,
   ThumbsUp,
   MessageSquare,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 import { initialModules, videosData, articlesData, initialLeaderboard } from './data';
+import { moduleQuizzes } from './quizData';
 import { Lesson, Module, Video, Article, LeaderboardUser } from './types';
 import { supabase, isSupabaseConfigured, SUPABASE_BOOTSTRAP_SQL } from './supabase';
 
@@ -61,6 +63,21 @@ export default function App() {
   const [completedArticles, setCompletedArticles] = useState<string[]>(() => getInitialProgress('completedArticles', []));
   const [claimedModuleBonuses, setClaimedModuleBonuses] = useState<string[]>(() => getInitialProgress('claimedModuleBonuses', []));
   const [userName, setUserName] = useState<string>(() => getInitialProgress('userName', 'You (First Timer!)'));
+  const [quizStates, setQuizStates] = useState<Record<string, {
+    curQuestionIndex: number;
+    selectedOption: number | null;
+    isSubmitted: boolean;
+    score: number;
+    finished: boolean;
+    answersSelected: (number | null)[];
+  }>>(() => getInitialProgress('quizStates', {}));
+
+  // Popup 10-Scenario Master Quiz Modal States
+  const [activeQuizModuleId, setActiveQuizModuleId] = useState<string | null>(null);
+  const [activeQuizAnswers, setActiveQuizAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [activeQuizSubmitted, setActiveQuizSubmitted] = useState<boolean>(false);
+  const [showExitConfirm, setShowExitConfirm] = useState<boolean>(false);
+  const [showRetakeConfirm, setShowRetakeConfirm] = useState<boolean>(false);
 
   // Supabase Authentication & Synced user state
   const [user, setUser] = useState<any>(null);
@@ -153,7 +170,8 @@ export default function App() {
     localStorage.setItem('pmprep_completedArticles', JSON.stringify(completedArticles));
     localStorage.setItem('pmprep_claimedModuleBonuses', JSON.stringify(claimedModuleBonuses));
     localStorage.setItem('pmprep_userName', JSON.stringify(userName));
-  }, [xp, xpToday, dayStreak, weeklyGoalDays, completedLessons, completedVideos, completedArticles, claimedModuleBonuses, userName]);
+    localStorage.setItem('pmprep_quizStates', JSON.stringify(quizStates));
+  }, [xp, xpToday, dayStreak, weeklyGoalDays, completedLessons, completedVideos, completedArticles, claimedModuleBonuses, userName, quizStates]);
 
   // 2. Fetch/Load profile from Supabase Database
   const loadUserProfile = async (userId: string) => {
@@ -849,58 +867,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Beginner Tour Step 0 */}
-              {beginnerTourOpen && tourStep === 0 ? (
-                <div className="bg-gradient-to-br from-indigo-50 via-white to-sky-50 border-2 border-indigo-400 rounded-2xl p-5 md:p-6 shadow-md transition-all relative overflow-hidden animate-pulse-subtle">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3"></div>
-                  <div className="absolute -top-3 left-6 px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
-                    Beginner Guide: Step 1 of 4
-                  </div>
-                  <div className="flex gap-4 items-start mt-2">
-                    <span className="text-3xl filter drop-shadow">🚀</span>
-                    <div className="space-y-3 flex-1">
-                      <h4 className="font-extrabold text-indigo-950 text-base md:text-lg">
-                        Welcome, Future Product Manager! Let's get started 👋
-                      </h4>
-                      <p className="text-xs md:text-sm text-indigo-900/90 font-medium leading-relaxed max-w-3xl">
-                        Product discovery is the secret weapon of elite software design teams. To help you build ultimate confidence, we prepared step-by-step guidance! <strong className="text-indigo-950 font-extrabold">Chapter 1: Discovery Foundations</strong> is your perfect starting point.
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <button 
-                          onClick={() => {
-                            setActiveModuleId('foundations');
-                            setActiveTab('path');
-                            setTourStep(1);
-                          }} 
-                          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all shadow hover:shadow-md cursor-pointer flex items-center gap-1.5"
-                        >
-                          <span>Open Chapter 1 & Continue</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={dismissTour} 
-                          className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 cursor-pointer"
-                        >
-                          Skip Guide
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex justify-end">
-                  <button 
-                    onClick={() => {
-                      setBeginnerTourOpen(true);
-                      setTourStep(0);
-                    }}
-                    className="flex items-center gap-2 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 text-indigo-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Need Help? Launch Quick Rookie Tour</span>
-                  </button>
-                </div>
-              )}
+
 
               {/* List of Modules */}
               <div className="space-y-4">
@@ -1042,6 +1009,23 @@ export default function App() {
               { title: "Keep it Simple", desc: "Always reduce complexity for web beginners.", badgeColor: "border-amber-500", dotColor: "bg-amber-500" }
             ];
 
+            const updateQuizState = (moduleId: string, newState: any) => {
+              setQuizStates(prev => {
+                const current = prev[moduleId] || {
+                  curQuestionIndex: 0,
+                  selectedOption: null,
+                  isSubmitted: false,
+                  score: 0,
+                  finished: false,
+                  answersSelected: Array(10).fill(null)
+                };
+                return {
+                  ...prev,
+                  [moduleId]: { ...current, ...newState }
+                };
+              });
+            };
+
             return (
               <div className="space-y-6">
                 
@@ -1051,50 +1035,6 @@ export default function App() {
                   <ChevronRight className="w-3.5 h-3.5 text-[#3f4a36]" />
                   <span className="text-[#2b6c00]">{activeModule.title}</span>
                 </nav>
-
-                {/* Beginner Tour Step 1 */}
-                {beginnerTourOpen && tourStep === 1 && activeModule.id === 'foundations' && (
-                  <div className="bg-gradient-to-br from-indigo-50 via-white to-sky-50 border-2 border-indigo-400 rounded-2xl p-5 md:p-6 shadow-md relative overflow-hidden animate-fade-in">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3"></div>
-                    <div className="absolute -top-3 left-6 px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
-                      Beginner Guide: Step 2 of 4
-                    </div>
-                    <div className="flex gap-4 items-start mt-2">
-                      <span className="text-3xl filter drop-shadow">📖</span>
-                      <div className="space-y-2 flex-1">
-                        <h4 className="font-extrabold text-indigo-950 text-base md:text-lg">
-                          Nice work! Let's explore the Textbook Guides 💡
-                        </h4>
-                        <p className="text-xs md:text-sm text-indigo-900/90 font-medium leading-relaxed">
-                          This section contains your core educational readings. Take a moment to read topic guides such as <strong className="text-indigo-950">"What is Product Discovery?"</strong>, <strong className="text-indigo-950">"Discovery vs Delivery"</strong>, and <strong className="text-indigo-950">"The Double Diamond"</strong> below! It helps to understand these master concepts before tackling practice tasks.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2 pt-2">
-                          <button 
-                            onClick={() => setTourStep(2)} 
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-lg transition-all shadow cursor-pointer text-center"
-                          >
-                            Next: Check off Concepts Checklist ✏️
-                          </button>
-                          <button 
-                            onClick={() => {
-                              setActiveTab('learn');
-                              setTourStep(0);
-                            }} 
-                            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all border border-slate-200 cursor-pointer"
-                          >
-                            Back
-                          </button>
-                          <button 
-                            onClick={dismissTour} 
-                            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-all cursor-pointer border border-transparent"
-                          >
-                            Dismiss
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Restructured Active Module Textbook Flow */}
                 <section className="bg-white border border-[#becbb1] rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
@@ -1576,7 +1516,10 @@ export default function App() {
                               Next: View Media Rooms 📺
                             </button>
                             <button 
-                              onClick={() => setTourStep(1)} 
+                              onClick={() => {
+                                setActiveTab('learn');
+                                setTourStep(0);
+                              }} 
                               className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all border border-slate-200 cursor-pointer"
                             >
                               Back
@@ -1787,6 +1730,106 @@ export default function App() {
                     </div>
                   )}
                 </section>
+
+                {/* CHAPTER MASTER QUIZ LAUNCHER BANNER */}
+                {(() => {
+                  const quiz = moduleQuizzes[activeModule.id];
+                  if (!quiz) return null;
+
+                  const activeQuizState = quizStates[activeModule.id] || {
+                    curQuestionIndex: 0,
+                    selectedOption: null,
+                    isSubmitted: false,
+                    score: 0,
+                    finished: false,
+                    answersSelected: Array(10).fill(null)
+                  };
+
+                  const hasFinishedQuiz = !!activeQuizState.finished;
+                  const savedScore = activeQuizState.score || 0;
+
+                  return (
+                    <section className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-930 border-2 border-indigo-500 rounded-3xl p-6 md:p-8 text-white space-y-6 shadow-xl relative overflow-hidden mt-8" id="chapter-quiz-section">
+                      {/* Decorative elements */}
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl"></div>
+                      <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
+
+                      <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                        <div className="space-y-2 flex-1">
+                          <span className="inline-flex items-center gap-1.5 bg-indigo-500/35 text-indigo-200 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-indigo-400/35">
+                            <Trophy className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                            <span>10-Question Master Quiz</span>
+                          </span>
+                          <h3 className="font-black text-2xl md:text-3xl text-white tracking-tight">
+                            {quiz.title}
+                          </h3>
+                          <p className="text-sm text-indigo-200 leading-relaxed font-medium max-w-2xl">
+                            Practice vocabulary and validate your product knowledge with 10 real-world PM cases. Earn <strong className="text-[#58cc02] font-black">+10 XP</strong> per correct answer!
+                          </p>
+                        </div>
+
+                        {hasFinishedQuiz ? (
+                          <div className="bg-indigo-950/80 px-6 py-4 rounded-2xl border border-indigo-400/30 text-center shrink-0 min-w-[200px]">
+                            <span className="text-[10px] text-indigo-300 font-extrabold uppercase tracking-widest block font-mono">Quiz Completed</span>
+                            <div className="text-2xl font-black text-[#58cc02] my-1 font-mono">
+                              {savedScore} <span className="text-white text-sm font-medium">/ 10 Correct</span>
+                            </div>
+                            <span className="text-xs text-amber-300 font-bold">
+                              {savedScore === 10 ? "👑 Universal Expert!" : savedScore >= 8 ? "🌟 Senior Lead!" : savedScore >= 5 ? "📖 Practicing Specialist!" : "🧐 Junior Apprentice"}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="bg-indigo-950/40 px-5 py-3 rounded-2xl border border-indigo-500/20 text-center shrink-0">
+                            <span className="text-[10px] text-indigo-300 font-black uppercase tracking-widest block font-mono">Rewards Pot</span>
+                            <strong className="text-xl font-black text-amber-400 font-mono">+100 total XP</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="relative pt-4 border-t border-indigo-500/30 flex flex-wrap gap-4">
+                        {hasFinishedQuiz ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setActiveQuizModuleId(activeModule.id);
+                                setActiveQuizAnswers(activeQuizState.answersSelected);
+                                setActiveQuizSubmitted(true);
+                              }}
+                              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer border-t border-indigo-400/30"
+                            >
+                              <Info className="w-4 h-4" />
+                              <span>REVIEW ANSWERS vs CORRECT ANSWERS</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setActiveQuizModuleId(activeModule.id);
+                                setActiveQuizAnswers(Array(10).fill(null));
+                                setActiveQuizSubmitted(false);
+                              }}
+                              className="px-6 py-3 bg-indigo-950 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-200 text-xs font-black rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              <span>RETAKE MASTER QUIZ</span>
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setActiveQuizModuleId(activeModule.id);
+                              setActiveQuizAnswers(Array(10).fill(null));
+                              setActiveQuizSubmitted(false);
+                            }}
+                            className="px-8 py-4 bg-[#58cc02] hover:bg-[#46a302] text-slate-950 text-xs font-black rounded-xl transition-all shadow-lg hover:shadow-[#58cc02]/20 hover:scale-102 flex items-center gap-2 cursor-pointer uppercase tracking-wider font-mono font-black"
+                          >
+                            <span>Launch 10-Question Popup Quiz</span>
+                            <ArrowRight className="w-4.5 h-4.5 stroke-[3px]" />
+                          </button>
+                        )}
+                      </div>
+                    </section>
+                  );
+                })()}
 
                 {/* Ready to Finish claim reward section */}
                 <footer className="mt-8 pt-6 border-t border-[#becbb1] flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-2xl">
@@ -2715,6 +2758,523 @@ export default function App() {
           <Plus className="w-6 h-6 text-white" />
         </button>
       )}
+
+      {/* 10-Question Comprehensive Master Quiz Popup */}
+      {activeQuizModuleId && (() => {
+        const quiz = moduleQuizzes[activeQuizModuleId];
+        if (!quiz) return null;
+
+        const totalQuestions = quiz.questions.length;
+        const answersCount = activeQuizAnswers.filter(ans => ans !== null).length;
+
+        // Calculate score
+        let score = 0;
+        activeQuizAnswers.forEach((ans, idx) => {
+          if (ans === quiz.questions[idx].correctIndex) {
+            score++;
+          }
+        });
+
+        // Close modal safety
+        const handleCloseModal = () => {
+          if (!activeQuizSubmitted && answersCount > 0) {
+            setShowExitConfirm(true);
+          } else {
+            setActiveQuizModuleId(null);
+            setShowExitConfirm(false);
+          }
+        };
+
+        const confirmExit = () => {
+          setActiveQuizModuleId(null);
+          setShowExitConfirm(false);
+        };
+
+        const handleSubmitQuiz = () => {
+          // Calculate score
+          let finalScore = 0;
+          activeQuizAnswers.forEach((ans, idx) => {
+            if (ans === quiz.questions[idx].correctIndex) {
+              finalScore++;
+            }
+          });
+
+          // XP logic: +10 XP per correct answer
+          const xpEarned = finalScore * 10;
+          setXp(p => p + xpEarned);
+          setXpToday(p => p + xpEarned);
+
+          // Update global state & LocalStorage
+          setQuizStates(prev => ({
+            ...prev,
+            [activeQuizModuleId]: {
+              curQuestionIndex: 9, // legacy
+              selectedOption: null, // legacy
+              isSubmitted: true,
+              score: finalScore,
+              finished: true,
+              answersSelected: activeQuizAnswers
+            }
+          }));
+
+          setActiveQuizSubmitted(true);
+          triggerNotification(
+            `🏆 Master Quiz Submitted!`,
+            `You answered ${finalScore} of ${totalQuestions} correctly and earned +${xpEarned} XP!`
+          );
+        };
+
+        const handleRetakeQuiz = () => {
+          setShowRetakeConfirm(true);
+        };
+
+        const confirmRetake = () => {
+          setActiveQuizAnswers(Array(10).fill(null));
+          setActiveQuizSubmitted(false);
+          setShowRetakeConfirm(false);
+          
+          // Clear in global state too
+          setQuizStates(prev => ({
+            ...prev,
+            [activeQuizModuleId]: {
+              curQuestionIndex: 0,
+              selectedOption: null,
+              isSubmitted: false,
+              score: 0,
+              finished: false,
+              answersSelected: Array(10).fill(null)
+            }
+          }));
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+            
+            {/* Custom Exit Quiz Confirmation Dialogue Overlay */}
+            {showExitConfirm && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
+                <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+                  <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto border border-amber-200 text-amber-600 animate-bounce">
+                    <HelpCircle className="w-9 h-9" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-black text-slate-900 tracking-tight">Exit Quiz Practice Draft?</h4>
+                    <p className="text-sm text-slate-600 font-medium">
+                      Are you sure you want to close this quiz? Your current answered scenarios will not be saved.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => setShowExitConfirm(false)}
+                      className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-all cursor-pointer border border-slate-200"
+                    >
+                      Keep Answering
+                    </button>
+                    <button
+                      onClick={confirmExit}
+                      className="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                    >
+                      Discard Draft & Exit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Custom Retake Quiz Confirmation Dialogue Overlay */}
+            {showRetakeConfirm && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
+                <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto border border-indigo-200 text-indigo-600 animate-pulse">
+                    <RefreshCw className="w-8 h-8" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-black text-slate-900 tracking-tight">Retake Quiz Practice?</h4>
+                    <p className="text-sm text-slate-600 font-medium">
+                      Are you sure you want to reset and retake this quiz? This will clear all current scores and selections.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => setShowRetakeConfirm(false)}
+                      className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-all cursor-pointer border border-slate-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmRetake}
+                      className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                    >
+                      Reset & Retake
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full p-5 sm:p-8 space-y-6 shadow-2xl relative my-4 max-h-[92vh] overflow-y-auto text-slate-800">
+              
+              {/* Abs Close Button */}
+              <button 
+                onClick={handleCloseModal}
+                className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 p-2 rounded-full z-10 border border-slate-200 transition-all cursor-pointer"
+                title="Exit Quiz"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Header */}
+              <div className="border-b border-slate-100 pb-4 pr-10">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border border-indigo-100/60">
+                    <Trophy className="w-3 h-3 text-amber-500 fill-amber-300" />
+                    <span>Product Master Quiz</span>
+                  </span>
+                  {activeQuizSubmitted && (
+                    <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-100/60">
+                      <span>RESULTS REVIEW</span>
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+                  {quiz.title}
+                </h3>
+                <p className="text-xs text-slate-600 font-medium mt-1">
+                  Validate your theoretical vocabulary with 10 real-world scenarios. Earn <strong className="text-amber-600 font-extrabold">+10 XP</strong> per correct answer!
+                </p>
+              </div>
+
+              {/* Score breakdown if submitted */}
+              {activeQuizSubmitted && (
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-center space-y-2 animate-fade-in relative overflow-hidden">
+                  <div className="text-sm font-black text-slate-500 uppercase tracking-widest block font-mono">YOUR SCORING INSIGHTS</div>
+                  <div className="text-4xl font-black text-[#58cc02] my-1 font-mono">
+                    {score} <span className="text-slate-600 font-medium text-lg">/ 10 Correct ({score * 10}%)</span>
+                  </div>
+                  <p className="text-xs text-slate-600 font-medium max-w-xl mx-auto">
+                    {score === 10 ? (
+                      <span className="text-amber-600 font-bold block">👑 Perfect Score! You have attained absolute mastery.</span>
+                    ) : score >= 8 ? (
+                      <span className="text-amber-600 font-bold block">🌟 Outstanding! You represent elite first-tier product judgment.</span>
+                    ) : score >= 5 ? (
+                      <span className="text-slate-600 block">📖 Great effort! Spend effort looking at the explanation cards below to reach perfection.</span>
+                    ) : (
+                      <span className="text-rose-600 block">🧐 Practice makes perfect. Try retaking the quiz to build your conceptual muscle memory!</span>
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {/* Progress counter for solving mode */}
+              {!activeQuizSubmitted && (
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-700">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#58cc02] animate-pulse"></span>
+                    <span className="text-xs text-slate-505 text-slate-500 font-bold uppercase tracking-wider font-mono">Progress status:</span>
+                    <strong className="text-slate-900 font-mono font-black">{answersCount} of {totalQuestions} scenarios answered</strong>
+                  </div>
+                  <div className="w-full sm:w-48 bg-slate-200 rounded-full h-2 overflow-hidden border border-slate-300/40">
+                    <div 
+                      className="bg-[#58cc02] h-full transition-all duration-300" 
+                      style={{ width: `${(answersCount / totalQuestions) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Questions Container List (Rendering ALL 10 Questions AT ONCE!) */}
+              <div className="space-y-12 max-h-[55vh] overflow-y-auto p-4 sm:p-6 bg-slate-100 rounded-3xl border border-slate-200/80 custom-quiz-scrollbar">
+                {quiz.questions.map((q, qIdx) => {
+                  const userAnswer = activeQuizAnswers[qIdx];
+                  const correctAnswer = q.correctIndex;
+                  const isCorrect = userAnswer === correctAnswer;
+
+                  const isEven = qIdx % 2 === 0;
+                  let cardStyle = "";
+                  let headerBadgeStyle = "";
+
+                  if (activeQuizSubmitted) {
+                    if (userAnswer === null) {
+                      cardStyle = "border-amber-400 border-t-[10px] bg-amber-50/10 shadow-sm";
+                      headerBadgeStyle = "bg-amber-100 text-amber-900 border-amber-300";
+                    } else if (isCorrect) {
+                      cardStyle = "border-emerald-500 border-t-[10px] bg-emerald-50/10 shadow-sm";
+                      headerBadgeStyle = "bg-emerald-100 text-emerald-950 border-emerald-300";
+                    } else {
+                      cardStyle = "border-rose-500 border-t-[10px] bg-rose-50/10 shadow-sm";
+                      headerBadgeStyle = "bg-rose-100 text-rose-955 border-rose-300";
+                    }
+                  } else {
+                    if (userAnswer !== null) {
+                      cardStyle = "border-indigo-600 border-t-[10px] bg-indigo-50/20 shadow-md ring-2 ring-indigo-200/40";
+                      headerBadgeStyle = "bg-indigo-600 text-white border-indigo-500 shadow-xs";
+                    } else {
+                      cardStyle = isEven
+                        ? "border-slate-800 border-t-[10px] bg-white shadow-sm hover:shadow-md hover:border-slate-700"
+                        : "border-indigo-900 border-t-[10px] bg-slate-50/30 shadow-sm hover:shadow-md hover:border-indigo-850";
+                      headerBadgeStyle = isEven
+                        ? "bg-slate-800 text-white border-slate-700"
+                        : "bg-indigo-950 text-white border-indigo-900";
+                    }
+                  }
+
+                  return (
+                    <div 
+                      key={q.id} 
+                      className={`relative p-6 md:p-8 rounded-3xl border-2 transition-all duration-200 overflow-hidden ${cardStyle}`}
+                    >
+                      {/* Subtle Diagonal Pattern Overlay */}
+                      <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-40 pointer-events-none ${
+                        isEven ? "bg-slate-300/30" : "bg-indigo-300/30"
+                      }`} />
+
+                      {/* Large Watermark Question Counter on Top Right */}
+                      <div className={`absolute right-6 top-3 text-7xl font-black select-none pointer-events-none opacity-[0.08] tracking-tight font-mono leading-none ${
+                        activeQuizSubmitted
+                          ? userAnswer === null
+                            ? 'text-amber-500'
+                            : isCorrect
+                              ? 'text-emerald-500'
+                              : 'text-rose-500'
+                          : userAnswer !== null
+                            ? 'text-indigo-500'
+                            : 'text-slate-500'
+                      }`}>
+                        #{qIdx + 1}
+                      </div>
+
+                      {/* Header row split by a dash divider */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b-2 border-dashed border-slate-200">
+                        <div className="flex items-center gap-3">
+                          <span className={`inline-flex items-center justify-center rounded-xl w-9 h-9 text-xs font-black shadow-sm border ${headerBadgeStyle}`}>
+                            {qIdx + 1}
+                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#58cc02] font-mono leading-none mb-1">
+                              ASSESSMENT SECTOR
+                            </span>
+                            <span className="text-xs font-bold text-slate-700 font-sans leading-none">
+                              Scenario Question {qIdx + 1} of 10
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status elements */}
+                        {activeQuizSubmitted && (
+                          userAnswer === null ? (
+                            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wider self-start sm:self-auto">
+                              <HelpCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span>Left Unanswered</span>
+                            </span>
+                          ) : isCorrect ? (
+                            <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wider self-start sm:self-auto">
+                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 stroke-[3px]" />
+                              <span>Assessment Correct</span>
+                            </span>
+                          ) : (
+                            <span className="bg-rose-100 text-rose-900 border border-rose-300 text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wider self-start sm:self-auto">
+                              <X className="w-3.5 h-3.5 text-rose-600 shrink-0 stroke-[3px]" />
+                              <span>Assessment Incorrect</span>
+                            </span>
+                          )
+                        )}
+                      </div>
+
+                      {/* Question Text */}
+                      <p className="text-sm md:text-base font-bold leading-relaxed text-slate-900 mb-5 pl-0.5">
+                        {q.text}
+                      </p>
+
+                      {/* Options Block */}
+                      <div className="grid grid-cols-1 gap-2.5 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                        {q.options.map((optionText, oIdx) => {
+                          const isSelected = userAnswer === oIdx;
+                          const isCorrectOpt = oIdx === correctAnswer;
+                          const isWrongOpt = isSelected && !isCorrectOpt;
+
+                          if (!activeQuizSubmitted) {
+                            return (
+                              <button
+                                key={oIdx}
+                                onClick={() => {
+                                  const updated = [...activeQuizAnswers];
+                                  if (updated[qIdx] === oIdx) {
+                                    updated[qIdx] = null; // Toggle off
+                                  } else {
+                                    updated[qIdx] = oIdx;
+                                  }
+                                  setActiveQuizAnswers(updated);
+                                }}
+                                className={`w-full text-left p-3 rounded-xl border text-xs sm:text-sm flex gap-3 items-start transition-all cursor-pointer ${
+                                  isSelected 
+                                    ? 'border-indigo-500 bg-indigo-50/80 text-indigo-900 font-extrabold ring-2 ring-indigo-200/50' 
+                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                                }`}
+                              >
+                                <span className={`w-5.5 h-5.5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black ${
+                                  isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                                }`}>
+                                  {String.fromCharCode(65 + oIdx)}
+                                </span>
+                                <span className="flex-1 leading-relaxed mt-0.5">{optionText}</span>
+                              </button>
+                            );
+                          } else {
+                            // Review mode
+                            let optionStyle = "border-slate-200/70 bg-slate-50/60 text-slate-400";
+                            let bulletStyle = "bg-slate-200 text-slate-500";
+                            let statusIcon = null;
+
+                            if (isCorrectOpt) {
+                              optionStyle = "border-emerald-500 bg-emerald-50 text-emerald-900 font-bold ring-2 ring-emerald-100/80";
+                              bulletStyle = "bg-emerald-600 text-white";
+                              statusIcon = <Check className="w-4 h-4 text-emerald-600 shrink-0 stroke-[3px]" />;
+                            } else if (isWrongOpt) {
+                              optionStyle = "border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-100/80 font-medium";
+                              bulletStyle = "bg-rose-600 text-white";
+                              statusIcon = <X className="w-4 h-4 text-rose-600 shrink-0 stroke-[3px]" />;
+                            }
+
+                            return (
+                              <div
+                                key={oIdx}
+                                className={`w-full text-left p-3 rounded-xl border text-xs sm:text-sm flex gap-3 items-start transition-all ${optionStyle}`}
+                              >
+                                <span className={`w-5.5 h-5.5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black ${bulletStyle}`}>
+                                  {String.fromCharCode(65 + oIdx)}
+                                </span>
+                                <span className="flex-1 leading-relaxed mt-0.5">{optionText}</span>
+                                {statusIcon}
+                              </div>
+                            );
+                          }
+                        })}
+                      </div>
+
+                      {/* Review Block (Evaluating the 3 cases requested) */}
+                      {activeQuizSubmitted && (
+                        (() => {
+                          if (userAnswer === null) {
+                            // Case 3: Empty / Blank answer - display "Blank answer", but also give right answer and explanation
+                            return (
+                              <div className="bg-amber-50 p-4.5 rounded-xl border border-amber-200 text-xs sm:text-sm space-y-2.5 mt-3 animate-fade-in text-slate-700">
+                                <div className="text-xs text-amber-800 font-extrabold flex items-center gap-1.5 uppercase tracking-wider font-mono">
+                                  <HelpCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                                  <span>Blank Answer (You left this unanswered)</span>
+                                </div>
+                                <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 space-y-1">
+                                  <span className="text-emerald-700 font-extrabold block uppercase tracking-widest text-[8.5px] font-mono">✓ Right Answer:</span>
+                                  <span className="text-slate-800 font-semibold text-xs text-slate-900">Option {String.fromCharCode(65 + correctAnswer)}: {q.options[correctAnswer]}</span>
+                                </div>
+                                <div className="text-xs text-slate-600 leading-relaxed font-semibold pt-2 border-t border-slate-200">
+                                  <strong className="text-amber-700 font-extrabold">💡 Explanation:</strong> {q.explanation}
+                                </div>
+                              </div>
+                            );
+                          } else if (isCorrect) {
+                            // Case 1: User submitted right answer - ONLY explanation of the answer is shown
+                            return (
+                              <div className="bg-emerald-50 p-4.5 rounded-xl border border-emerald-200 text-xs sm:text-sm space-y-2 mt-3 animate-fade-in text-slate-700">
+                                <div className="text-xs text-emerald-800 font-black flex items-center gap-1.5 uppercase tracking-wider font-mono">
+                                  <Check className="w-4 h-4 text-emerald-600 shrink-0 stroke-[3px]" />
+                                  <span>✓ Correct Selection! (Option {String.fromCharCode(65 + userAnswer)})</span>
+                                </div>
+                                <div className="text-xs text-slate-600 leading-relaxed font-semibold pt-2 border-t border-emerald-200">
+                                  <strong className="text-emerald-800 font-extrabold">💡 Explanation:</strong> {q.explanation}
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            // Case 2: User submitted wrong answer - display what was the right answer and explanation
+                            return (
+                              <div className="bg-rose-50 p-4.5 rounded-xl border border-rose-200 text-xs sm:text-sm space-y-3 mt-3 animate-fade-in text-slate-700">
+                                <div className="text-xs text-rose-800 font-black flex items-center gap-1.5 uppercase tracking-wider font-mono">
+                                  <X className="w-4 h-4 text-rose-600 shrink-0 stroke-[3px]" />
+                                  <span>✗ Incorrect Choice Chosen (Option {String.fromCharCode(65 + userAnswer)})</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                  <div className="bg-white p-2.5 rounded-lg border border-rose-100">
+                                    <span className="text-rose-500 font-bold block mb-0.5 uppercase tracking-widest text-[8px] font-mono">✗ Your Selection:</span>
+                                    <span className="text-slate-700 font-medium font-sans">Option {String.fromCharCode(65 + userAnswer)}: {q.options[userAnswer]}</span>
+                                  </div>
+                                  <div className="bg-white p-2.5 rounded-lg border border-emerald-100">
+                                    <span className="text-emerald-700 font-bold block mb-0.5 uppercase tracking-widest text-[8px] font-mono">✓ Right Answer:</span>
+                                    <span className="text-slate-800 font-semibold font-sans text-slate-900">Option {String.fromCharCode(65 + correctAnswer)}: {q.options[correctAnswer]}</span>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-slate-600 leading-relaxed font-semibold pt-2 border-t border-slate-200">
+                                  <strong className="text-amber-700 font-extrabold">💡 Explanation:</strong> {q.explanation}
+                                </div>
+                              </div>
+                            );
+                          }
+                        })()
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Action Sheet Footer */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-slate-500 font-medium text-center sm:text-left">
+                  {!activeQuizSubmitted ? (
+                    <span>Make sure you cover overall product practice choices (minimum 1 required).</span>
+                  ) : (
+                    <span>Review completed successfully. Click Back to Course to proceed.</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  {!activeQuizSubmitted ? (
+                    <>
+                      <button
+                        onClick={handleCloseModal}
+                        className="flex-1 sm:flex-none px-5 py-3 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                      >
+                        Exit Draft
+                      </button>
+                      <button
+                        onClick={handleSubmitQuiz}
+                        disabled={answersCount === 0}
+                        className={`flex-1 sm:flex-none px-6 py-3 font-semibold text-xs rounded-xl transition-all uppercase tracking-wide font-mono ${
+                          answersCount === 0
+                            ? 'bg-slate-100 text-slate-405 border border-slate-200 cursor-not-allowed opacity-60'
+                            : 'bg-[#58cc02] hover:bg-[#46a302] text-white shadow-md cursor-pointer font-black'
+                        }`}
+                        title={answersCount === 0 ? "Please answer at least one scenario to submit!" : "Lock answers and submit!"}
+                      >
+                        Submit {answersCount > 0 ? `${answersCount} Answers` : "Answers"}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleRetakeQuiz}
+                        className="flex-1 sm:flex-none px-5 py-3 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer font-sans"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Retake Practice</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveQuizModuleId(null)}
+                        className="flex-1 sm:flex-none px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center"
+                      >
+                        Back to Course
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
