@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { 
   BookOpen, 
   Map, 
@@ -62,7 +62,7 @@ export default function App() {
   const [completedVideos, setCompletedVideos] = useState<string[]>(() => getInitialProgress('completedVideos', []));
   const [completedArticles, setCompletedArticles] = useState<string[]>(() => getInitialProgress('completedArticles', []));
   const [claimedModuleBonuses, setClaimedModuleBonuses] = useState<string[]>(() => getInitialProgress('claimedModuleBonuses', []));
-  const [userName, setUserName] = useState<string>(() => getInitialProgress('userName', 'You (First Timer!)'));
+  const userName = 'Learner';
   const [quizStates, setQuizStates] = useState<Record<string, {
     curQuestionIndex: number;
     selectedOption: number | null;
@@ -159,6 +159,111 @@ export default function App() {
   ]);
   const [newPostText, setNewPostText] = useState<string>('');
 
+  // A ref to prevent pushing state to history when we are responding to back/forward navigation
+  const isPopStateRef = useRef<boolean>(false);
+
+  // Initialize and listen to history events (Bug 1 Browser Back/Forward navigation)
+  useEffect(() => {
+    // Initial state setup if empty
+    const initialState = {
+      activeTab: 'learn',
+      activeModuleId: 'foundations',
+      currentReadingArticleId: null,
+      currentWatchingVideoId: null,
+      searchText: '',
+      activeQuizModuleId: null
+    };
+
+    if (!window.history.state) {
+      window.history.replaceState(initialState, '');
+    } else {
+      // Restore state on reload
+      const state = window.history.state;
+      if (state.activeTab) setActiveTab(state.activeTab);
+      if (state.activeModuleId) setActiveModuleId(state.activeModuleId);
+      if (state.currentReadingArticleId) {
+        const art = articlesData.find(a => a.id === state.currentReadingArticleId);
+        if (art) setCurrentReadingArticle(art);
+      }
+      if (state.currentWatchingVideoId) {
+        const vid = videosData.find(v => v.id === state.currentWatchingVideoId);
+        if (vid) setCurrentWatchingVideo(vid);
+      }
+      if (state.searchText !== undefined) setSearchText(state.searchText);
+      if (state.activeQuizModuleId) setActiveQuizModuleId(state.activeQuizModuleId);
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state) {
+        isPopStateRef.current = true;
+        const { activeTab, activeModuleId, currentReadingArticleId, currentWatchingVideoId, searchText, activeQuizModuleId } = event.state;
+        
+        if (activeTab) setActiveTab(activeTab);
+        if (activeModuleId) setActiveModuleId(activeModuleId);
+        
+        if (currentReadingArticleId) {
+          const art = articlesData.find(a => a.id === currentReadingArticleId);
+          setCurrentReadingArticle(art || null);
+        } else {
+          setCurrentReadingArticle(null);
+        }
+        
+        if (currentWatchingVideoId) {
+          const vid = videosData.find(v => v.id === currentWatchingVideoId);
+          setCurrentWatchingVideo(vid || null);
+        } else {
+          setCurrentWatchingVideo(null);
+        }
+        
+        if (searchText !== undefined) setSearchText(searchText);
+        setActiveQuizModuleId(activeQuizModuleId || null);
+
+        // Reset popstate flag after state changes take effect
+        setTimeout(() => {
+          isPopStateRef.current = false;
+        }, 0);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Sync state changes to browser history
+  useEffect(() => {
+    if (isPopStateRef.current) return;
+
+    const newState = {
+      activeTab,
+      activeModuleId,
+      currentReadingArticleId: currentReadingArticle ? currentReadingArticle.id : null,
+      currentWatchingVideoId: currentWatchingVideo ? currentWatchingVideo.id : null,
+      searchText,
+      activeQuizModuleId
+    };
+
+    const currentState = window.history.state;
+    if (!currentState ||
+        currentState.activeTab !== activeTab ||
+        currentState.activeModuleId !== activeModuleId ||
+        currentState.currentReadingArticleId !== newState.currentReadingArticleId ||
+        currentState.currentWatchingVideoId !== newState.currentWatchingVideoId ||
+        currentState.searchText !== searchText ||
+        currentState.activeQuizModuleId !== activeQuizModuleId) {
+      window.history.pushState(newState, '');
+    }
+  }, [activeTab, activeModuleId, currentReadingArticle, currentWatchingVideo, searchText, activeQuizModuleId]);
+
+  const handleGoHome = () => {
+    setActiveTab('learn');
+    setSearchText('');
+    setCurrentReadingArticle(null);
+    setCurrentWatchingVideo(null);
+    setActiveQuizModuleId(null);
+  };
+
   // 1. Local storage synchroniser effect (offline-first persistence!)
   useEffect(() => {
     localStorage.setItem('pmprep_xp', JSON.stringify(xp));
@@ -189,7 +294,7 @@ export default function App() {
           .from('profiles')
           .insert({
             id: userId,
-            username: userName === 'You (First Timer!)' ? 'New PM Learner' : userName,
+            username: userName,
             xp: xp,
             xp_today: xpToday,
             day_streak: dayStreak,
@@ -211,9 +316,6 @@ export default function App() {
         setCompletedVideos(data.completed_videos || []);
         setCompletedArticles(data.completed_articles || []);
         setClaimedModuleBonuses(data.claimed_module_bonuses || []);
-        if (data.username) {
-          setUserName(data.username);
-        }
       }
     } catch (err) {
       console.error('Failed to load user profile.', err);
@@ -415,7 +517,7 @@ export default function App() {
 
     try {
       if (authMode === 'signup') {
-        const currentDisplayName = userName === 'You (First Timer!)' ? 'New PM Learner' : userName;
+        const currentDisplayName = userName;
         const { data, error } = await supabase.auth.signUp({
           email: authEmail,
           password: authPassword,
@@ -683,7 +785,7 @@ export default function App() {
           
           {/* Logo brand strictly for first screen on mobile / top bar on web */}
           <button 
-            onClick={() => { setActiveTab('learn'); setSearchText(''); }}
+            onClick={handleGoHome}
             className="flex items-center gap-2 text-left cursor-pointer hover:opacity-85 transition-opacity focus:outline-none"
           >
             <div className="w-10 h-10 bg-[#58cc02] rounded-xl flex items-center justify-center text-[#1e5000] md:hidden shadow-sm">
@@ -751,7 +853,7 @@ export default function App() {
           
           {/* Brand Identity / Header strictly matching Screen 1 details */}
           <button 
-            onClick={() => { setActiveTab('learn'); setSearchText(''); }}
+            onClick={handleGoHome}
             className="px-2 text-left hover:opacity-85 transition-opacity cursor-pointer group focus:outline-none"
           >
             <h1 className="font-extrabold text-2xl text-[#2b6c00] flex items-center gap-2 group-hover:text-[#1e5000] transition-colors">
@@ -1625,7 +1727,15 @@ export default function App() {
                         return (
                           <div 
                             key={vid.id}
-                            onClick={() => setCurrentWatchingVideo(vid)}
+                            onClick={() => {
+                              if (vid.youtubeId) {
+                                const url = vid.youtubeId.startsWith('http')
+                                  ? vid.youtubeId
+                                  : `https://www.youtube.com/watch?v=${vid.youtubeId}`;
+                                window.open(url, '_blank');
+                              }
+                              setCurrentWatchingVideo(vid);
+                            }}
                             className="bg-white rounded-2xl border border-[#becbb1] overflow-hidden cursor-pointer hover:shadow-lg transition-all group scale-100 active:scale-95 duration-200 flex flex-col justify-between"
                           >
                             <div className="relative aspect-video bg-[#eeeeee] overflow-hidden">
@@ -1634,6 +1744,9 @@ export default function App() {
                                 alt={vid.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80';
+                                }}
                               />
                               <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/40 transition-colors">
                                 <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-md text-red-600 scale-100 group-hover:scale-110 transition-transform">
@@ -2174,16 +2287,6 @@ export default function App() {
                   <h3 className="text-sm font-black uppercase tracking-wider text-[#1e5000] mb-2 flex items-center gap-1.5">
                     <span>👤 Identity & Stats</span>
                   </h3>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-[#3f4a36] mb-1">Your display name</label>
-                    <input 
-                      type="text" 
-                      value={userName}
-                      onChange={(e) => setUserName(e.target.value)}
-                      className="w-full bg-slate-50 p-3 text-sm rounded-xl border border-[#becbb1] text-[#1a1c1c] font-black focus:outline-none focus:ring-2 focus:ring-[#2b6c00]/30 transition-all font-sans"
-                    />
-                    <p className="text-[10px] text-slate-500 mt-1">This is your student name shown in the Gold League leaderboard.</p>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -2198,15 +2301,6 @@ export default function App() {
                         {dayStreak} Days
                       </div>
                     </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
-                    <button 
-                      onClick={() => triggerNotification("🛠️ Settings saved", "Your display name and offline stats are safely locked in.")}
-                      className="bg-[#2b6c00] text-white font-extrabold text-sm px-5 py-3 rounded-xl hover:bg-[#1e5000] transition-colors shadow cursor-pointer"
-                    >
-                      Save Identity Changes
-                    </button>
                   </div>
                 </div>
 
@@ -2641,6 +2735,9 @@ export default function App() {
                     alt={currentWatchingVideo.title}
                     className="absolute inset-0 w-full h-full object-cover opacity-80"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80';
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/40"></div>
 

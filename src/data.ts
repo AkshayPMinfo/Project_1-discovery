@@ -306,115 +306,212 @@ export const initialModules: Module[] = [
 ];
 
 export const videosData: Video[] = [
+  // Module 1 – Discovery Foundations
   {
     id: 'vid-foundations-1',
     moduleId: 'foundations',
-    title: 'Introduction to Product Discovery',
-    description: 'Why great ideas fail and how discovery secures your product trajectory.',
-    duration: '09:15',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxTbRSCaTBwxrQFlHs7WyfLtcMr2o6ud38ZaBfdgZ2Kim_l1FMuq8DCZDZPtx8FfMaHx-NrKwBqw-oh6yeWXCqBDVgkjZXBj2CidHk3SiGUyzDnyXcKXcU6dgo1UTGhoPy2z83HLD2t8n--ac28C0rzTQf10MQZYwXSjvT8ni_CQdhLwekHT-5KY8Sx0zWRmWI9BbX3IZswur2n_SpjAyi_DnkpmtXyPZD3zQZyWXWtCSh55GTGF2bVz7ogYzGiYRKOJQwip6ys_8',
-    author: 'Discovery Hub',
-    summary: 'This masterclass introduces product discovery as a mechanism to minimize risk. Building is easy; building the *right thing* is hard. You will learn the difference between user desires and user actions, and why setting research goals before coding is the ultimate superpower.',
-    youtubeId: 'z7D_mbyA_b8'
+    title: 'Mastering Product Discovery: A Step-by-Step Guide',
+    description: 'A comprehensive walkthrough of the product discovery process from strategy to validation.',
+    duration: '10:15',
+    imageUrl: 'https://img.youtube.com/vi/b39hUuCTJo0/hqdefault.jpg',
+    author: 'Inside The Product',
+    summary: 'This video outlines the step-by-step framework of modern product discovery. It explains how to structure discovery phases, align stakeholders, and validate assumptions before moving to delivery.',
+    youtubeId: 'b39hUuCTJo0'
   },
   {
-    id: 'vid-1',
+    id: 'vid-foundations-2',
+    moduleId: 'foundations',
+    title: 'Product Discovery with Data & User Research',
+    description: 'How to combine quantitative data analytics with qualitative user interviews for discovery.',
+    duration: '14:30',
+    imageUrl: 'https://img.youtube.com/vi/tuo3CCfCHao/hqdefault.jpg',
+    author: 'Product School',
+    summary: 'Learn how to make data-informed product discovery decisions. This talk covers setting up metrics, identifying drop-off points, and using user research to explain the "why" behind the numbers.',
+    youtubeId: 'tuo3CCfCHao'
+  },
+  // Module 2 – User Research
+  {
+    id: 'vid-research-1',
     moduleId: 'research',
-    title: 'Rob Fitzpatrick: How to talk to customers',
-    description: 'The definitive talk by the author himself on the core framework.',
-    duration: '12:45',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxTbRSCaTBwxrQFlHs7WyfLtcMr2o6ud38ZaBfdgZ2Kim_l1FMuq8DCZDZPtx8FfMaHx-NrKwBqw-oh6yeWXCqBDVgkjZXBj2CidHk3SiGUyzDnyXcKXcU6dgo1UTGhoPy2z83HLD2t8n--ac28C0rzTQf10MQZYwXSjvT8ni_CQdhLwekHT-5KY8Sx0zWRmWI9BbX3IZswur2n_SpjAyi_DnkpmtXyPZD3zQZyWXWtCSh55GTGF2bVz7ogYzGiYRKOJQwip6ys_8',
-    author: 'Rob Fitzpatrick',
-    summary: 'In this talk, Rob Fitzpatrick explains that you should never ask your mom whether she likes your business idea. She loves you and will tell you nice lies to protect your feelings. Instead, you need to ask questions about her specific daily tasks and look for concrete past behaviors rather than hypothetical promises.',
-    youtubeId: 'H75t8pS0b7g'
+    title: 'Customer Discovery for Product Managers',
+    description: 'Mastering customer interviews and extracting unbiased insights from target users.',
+    duration: '12:10',
+    imageUrl: 'https://img.youtube.com/vi/ymgGr1_M-xY/hqdefault.jpg',
+    author: 'Jay Clouse',
+    summary: 'A practical guide for product managers on customer discovery. Learn how to draft interview scripts, ask neutral questions, and filter out false compliments to uncover real pain points.',
+    youtubeId: 'ymgGr1_M-xY'
   },
   {
-    id: 'vid-2',
+    id: 'vid-research-2',
     moduleId: 'research',
-    title: 'The Mom Test in Practice',
-    description: 'Real-world examples of good vs. bad customer interviews.',
-    duration: '08:20',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAk7q0vqSw6ZPeiaWaG5MH-E70plN0sFoplxXUnHpQes6Oqw8MSEWy9Zhhwg81M0HAbsV6qY8RWZVqwiScxFTcu7VtQWv7fFFeFEOiqrQA4LQh1Ko49CaJnDqaMUpq-bRyZ-2aLHo-JI_lfLt6pBfaRzixXy5Q50MEC-LTZZPn0UDCmxzPiDYFA7nLn4MND2WPihz88D7VoaLD5rzpuqzSIMAs2WdKhgqgj_u03OBR5qgiCyGBOudQbUt-eXgeLGgEsr354K5p7xCg',
-    author: 'PM Prep Academy',
-    summary: 'This practical demonstration compares a "bad interview" and a "good interview". The bad interviewer asks: "Do you think a cooking tracker is a good idea?" and gets fake positivity. The good interviewer asks: "How did you plan your meals last Tuesday?" which reveals the user\'s real habit and constraints.',
-    youtubeId: '7gAnY_3fI04'
+    title: 'Doing User Research – A Day in the Life of a PM',
+    description: 'A realistic look into how product managers prepare, execute, and analyze user research.',
+    duration: '08:45',
+    imageUrl: 'https://img.youtube.com/vi/MxwyGi-3dzY/hqdefault.jpg',
+    author: 'Anthony Saltarelli',
+    summary: 'Follow a PM through a day of user research. See how they recruit participants, run sessions, document key findings, and share takeaways with design and engineering teams.',
+    youtubeId: 'MxwyGi-3dzY'
   },
+  // Module 3 – Competitive Research
   {
     id: 'vid-competitive-1',
     moduleId: 'competitive',
-    title: 'Competitive Analysis Made Simple',
-    description: 'Skip the massive spreadsheets; focus on competitor weaknesses.',
-    duration: '06:40',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9OIE06CXPEKQvaaJMXuZeP4rTCiBR3OsXmtATE6IDooigF_qo985YNCzShhwqWajpQT1wU4xICrz5Xrr7BnxikX-7a9XvZNDy3j3fWkm-F60SNUjiU8sePHkt6Y8P4D6P5n7rs2xRurYepLaZj9eioy6fC07UyHDp80wUl7mY1fix95f_cYW3rcpd2_hqTBL5HBwsZnCQcwPBU6jA3HmjPhs5k3P0Ngvr9t9wk0LIMVkMCBPiyMTuO5p9ZG0bYZmYQPzLvux5aZc',
-    author: 'Product Board',
-    summary: 'This video teaches you how to map competitors using value axes rather than listing 100 features. You\'ll see how to find competitor user reviews (especially 2-3 star reviews) to identify the key friction points their existing, paying customers complain about.',
-    youtubeId: '4-pB7aYfJ_M'
+    title: 'How to Use Competitive Analysis and Strategy',
+    description: 'Frameworks for assessing competitors and positioning your product to win.',
+    duration: '11:05',
+    imageUrl: 'https://img.youtube.com/vi/yCr2kha1YVU/hqdefault.jpg',
+    author: 'Product School',
+    summary: 'This video covers competitive analysis strategy, focusing on identifying market gaps, understanding competitor cost structures, and defining unique value propositions.',
+    youtubeId: 'yCr2kha1YVU'
   },
+  {
+    id: 'vid-competitive-2',
+    moduleId: 'competitive',
+    title: 'Competitive Analysis for Product Managers',
+    description: 'How to build a competitive matrix and analyze rival product features without losing focus.',
+    duration: '09:50',
+    imageUrl: 'https://img.youtube.com/vi/FGs_VnOa5vY/hqdefault.jpg',
+    author: 'Product League',
+    summary: 'A guide for PMs to analyze competitor landscapes. Learn how to map feature tables, track pricing structures, and spot differentiators that give your product a competitive edge.',
+    youtubeId: 'FGs_VnOa5vY'
+  },
+  // Module 4 – Survey Formation
   {
     id: 'vid-surveys-1',
     moduleId: 'surveys',
-    title: 'Designing Surveys That Yield Truthful Insights',
-    description: 'The science behind drafting questionnaires that avoid soft opinions.',
-    duration: '07:50',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9OIE06CXPEKQvaaJMXuZeP4rTCiBR3OsXmtATE6IDooigF_qo985YNCzShhwqWajpQT1wU4xICrz5Xrr7BnxikX-7a9XvZNDy3j3fWkm-F60SNUjiU8sePHkt6Y8P4D6P5n7rs2xRurYepLaZj9eioy6fC07UyHDp80wUl7mY1fix95f_cYW3rcpd2_hqTBL5HBwsZnCQcwPBU6jA3HmjPhs5k3P0Ngvr9t9wk0LIMVkMCBPiyMTuO5p9ZG0bYZmYQPzLvux5aZc',
-    author: 'Survey Labs',
-    summary: 'Learn why long surveys fail. This guide walks you through the 2-minute rule, how to construct clear check-box metrics, and how to weed out biased responses by asking for historical facts rather than hypothetical preferences.',
-    youtubeId: 'vstA777PebU'
+    title: 'User Research Surveys for Product Managers',
+    description: 'Best practices for designing user surveys that deliver high-quality, actionable insights.',
+    duration: '07:40',
+    imageUrl: 'https://img.youtube.com/vi/mH2r11T8RjM/hqdefault.jpg',
+    author: 'UX Research Hub',
+    summary: 'This video explores how to draft research surveys for product validation. Learn how to construct clear response scales, target the right segments, and avoid bias in your survey questions.',
+    youtubeId: 'mH2r11T8RjM'
   },
+  {
+    id: 'vid-surveys-2',
+    moduleId: 'surveys',
+    title: 'Writing Better Survey Questions',
+    description: 'Common mistakes in survey design and how to rewrite questions for higher accuracy.',
+    duration: '06:55',
+    imageUrl: 'https://img.youtube.com/vi/n5U-vL1Jt80/hqdefault.jpg',
+    author: 'UX Research Hub',
+    summary: 'Learn the art of survey questions. The video teaches how to eliminate leading prompts, avoid double-barreled questions, and write options that reflect accurate user sentiments.',
+    youtubeId: 'n5U-vL1Jt80'
+  },
+  // Module 5 – Problem Identification & Synthesis
   {
     id: 'vid-synthesis-1',
     moduleId: 'synthesis',
-    title: 'Mastering Customer Experience Framing & Affinity Maps',
-    description: 'Group user feedback points to see clear patterns in chaotic information.',
-    duration: '08:40',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxTbRSCaTBwxrQFlHs7WyfLtcMr2o6ud38ZaBfdgZ2Kim_l1FMuq8DCZDZPtx8FfMaHx-NrKwBqw-oh6yeWXCqBDVgkjZXBj2CidHk3SiGUyzDnyXcKXcU6dgo1UTGhoPy2z83HLD2t8n--ac28C0rzTQf10MQZYwXSjvT8ni_CQdhLwekHT-5KY8Sx0zWRmWI9BbX3IZswur2n_SpjAyi_DnkpmtXyPZD3zQZyWXWtCSh55GTGF2bVz7ogYzGiYRKOJQwip6ys_8',
-    author: 'UX Design Group',
-    summary: 'How do you turn 50 pages of interview transcripts into solid, prioritized software requirements? Learn UX synthesis step-by-step, including raw quote grouping, theme mapping, and identifying common user journey frustrations.',
-    youtubeId: 'Qp488-E2NTo'
+    title: 'Affinity Mapping User Research',
+    description: 'How to group qualitative interview notes to find patterns and synthesize problems.',
+    duration: '08:20',
+    imageUrl: 'https://img.youtube.com/vi/U368k94GZ80/hqdefault.jpg',
+    author: 'Design Academy',
+    summary: 'Learn how to run an affinity mapping session. Group research observations into themes, identify clusters of friction, and translate qualitative feedback into structured opportunities.',
+    youtubeId: 'U368k94GZ80'
   },
+  {
+    id: 'vid-synthesis-2',
+    moduleId: 'synthesis',
+    title: 'How to Synthesize User Research',
+    description: 'A framework for turning raw user transcripts and feedback into structured product insights.',
+    duration: '11:45',
+    imageUrl: 'https://img.youtube.com/vi/nnM37cZ_DkY/hqdefault.jpg',
+    author: 'UX Masterclass',
+    summary: 'Go from data overload to clear direction. This video details how to build empathy maps, draft user needs statements, and extract core themes from diverse research sources.',
+    youtubeId: 'nnM37cZ_DkY'
+  },
+  // Module 6 – Prioritization
   {
     id: 'vid-prioritization-1',
     moduleId: 'prioritization',
-    title: 'How to Prioritize Features Using RICE',
-    description: 'Learn how to run Reach, Impact, Confidence, and Effort calculations with teams.',
-    duration: '11:20',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAk7q0vqSw6ZPeiaWaG5MH-E70plN0sFoplxXUnHpQes6Oqw8MSEWy9Zhhwg81M0HAbsV6qY8RWZVqwiScxFTcu7VtQWv7fFFeFEOiqrQA4LQh1Ko49CaJnDqaMUpq-bRyZ-2aLHo-JI_lfLt6pBfaRzixXy5Q50MEC-LTZZPn0UDCmxzPiDYFA7nLn4MND2WPihz88D7VoaLD5rzpuqzSIMAs2WdKhgqgj_u03OBR5qgiCyGBOudQbUt-eXgeLGgEsr354K5p7xCg',
+    title: 'RICE Prioritization Framework',
+    description: 'Calculating Reach, Impact, Confidence, and Effort to score product features.',
+    duration: '09:15',
+    imageUrl: 'https://img.youtube.com/vi/5y_O57uGInM/hqdefault.jpg',
     author: 'Product Strategy Academy',
-    summary: 'A transparent deep dive into RICE framework mechanics. Learn how key product decisions are made at top tech companies using objective quantitative equations to filter out high-effort, low-value feature requests.',
+    summary: 'Learn the math behind the RICE framework. This video walks through grading reach, estimating impact, scoring confidence, and calculating developer effort to prioritize your backlog.',
     youtubeId: '5y_O57uGInM'
   },
   {
+    id: 'vid-prioritization-2',
+    moduleId: 'prioritization',
+    title: 'Product Prioritization Frameworks',
+    description: 'A comparison of popular prioritization techniques: RICE, Kano Model, and MoSCoW.',
+    duration: '13:20',
+    imageUrl: 'https://img.youtube.com/vi/FqJ3P70bS2c/hqdefault.jpg',
+    author: 'Product School',
+    summary: 'Explore the pros and cons of different prioritization systems. Learn when to use the Kano model for customer delight, MoSCoW for scope management, or value-vs-effort matrices for quick alignments.',
+    youtubeId: 'FqJ3P70bS2c'
+  },
+  // Module 7 – Hypothesis Formation
+  {
     id: 'vid-hypothesis-1',
     moduleId: 'hypothesis',
-    title: 'Deconstructing Product Hypotheses',
-    description: 'Learn to frame product opinions as falsifiable, scientifically testable business statements.',
-    duration: '07:15',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9OIE06CXPEKQvaaJMXuZeP4rTCiBR3OsXmtATE6IDooigF_qo985YNCzShhwqWajpQT1wU4xICrz5Xrr7BnxikX-7a9XvZNDy3j3fWkm-F60SNUjiU8sePHkt6Y8P4D6P5n7rs2xRurYepLaZj9eioy6fC07UyHDp80wUl7mY1fix95f_cYW3rcpd2_hqTBL5HBwsZnCQcwPBU6jA3HmjPhs5k3P0Ngvr9t9wk0LIMVkMCBPiyMTuO5p9ZG0bYZmYQPzLvux5aZc',
+    title: 'Product Hypothesis Testing',
+    description: 'How to frame feature development as hypotheses that can be proven or disproven.',
+    duration: '08:10',
+    imageUrl: 'https://img.youtube.com/vi/RscXGvO7O2Y/hqdefault.jpg',
     author: 'Silicon Valley PM Masterclass',
-    summary: 'Hypotheses are the blueprint of sound experimentation. Explore how Google, Meta, and Netflix validate assumptions by setting explicit, measurable binary metrics before entering active developer release cycles.',
+    summary: 'A guide to scientific product validation. Learn how to identify core assumptions, define testable hypotheses, and set clear quantitative thresholds for success or failure.',
     youtubeId: 'RscXGvO7O2Y'
   },
   {
+    id: 'vid-hypothesis-2',
+    moduleId: 'hypothesis',
+    title: 'Lean Startup – Build Measure Learn',
+    description: "Eric Ries' core feedback loop for building products under conditions of extreme uncertainty.",
+    duration: '10:45',
+    imageUrl: 'https://img.youtube.com/vi/yShoEqupgni/hqdefault.jpg',
+    author: 'Eric Ries',
+    summary: 'Explore the Build-Measure-Learn cycle. Learn how to minimize total time through the loop, create minimum viable products, and decide when to pivot or persevere.',
+    youtubeId: 'yShoEqupgni'
+  },
+  // Module 8 – Validation & Experiments
+  {
     id: 'vid-validation-1',
     moduleId: 'validation',
-    title: 'Smoke Testing & MVP Validation Strategies',
-    description: 'Validate customer purchase intent within hours before writing code.',
-    duration: '09:10',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxTbRSCaTBwxrQFlHs7WyfLtcMr2o6ud38ZaBfdgZ2Kim_l1FMuq8DCZDZPtx8FfMaHx-NrKwBqw-oh6yeWXCqBDVgkjZXBj2CidHk3SiGUyzDnyXcKXcU6dgo1UTGhoPy2z83HLD2t8n--ac28C0rzTQf10MQZYwXSjvT8ni_CQdhLwekHT-5KY8Sx0zWRmWI9BbX3IZswur2n_SpjAyi_DnkpmtXyPZD3zQZyWXWtCSh55GTGF2bVz7ogYzGiYRKOJQwip6ys_8',
-    author: 'FailSafe Startups',
-    summary: 'How to validate user request density using Landing Pages, fake doors, smoke triggers, and manual back-end workflows. Lean startup techniques that save hundreds of engineering hours.',
-    youtubeId: 'vstA777PebU'
+    title: 'MVP Validation',
+    description: 'Strategies for validating your Minimum Viable Product with real customer interactions.',
+    duration: '09:30',
+    imageUrl: 'https://img.youtube.com/vi/FIqzCSfT6Nk/hqdefault.jpg',
+    author: 'Product School',
+    summary: 'Understand how to run lean validation experiments. This session covers landing page test metrics, email list smoke tests, and mechanical concierge service validations.',
+    youtubeId: 'FIqzCSfT6Nk'
   },
+  {
+    id: 'vid-validation-2',
+    moduleId: 'validation',
+    title: 'Experiment Design for Product Managers',
+    description: 'Setting up controlled experiments, variables, and control groups for product testing.',
+    duration: '12:40',
+    imageUrl: 'https://img.youtube.com/vi/ErYybNNLzN8/hqdefault.jpg',
+    author: 'Melissa Perri',
+    summary: 'Learn the principles of robust experiment design. Set up independent variables, isolate controls, define activation benchmarks, and gather reliable data to confirm product hypotheses.',
+    youtubeId: 'ErYybNNLzN8'
+  },
+  // Module 9 – Success Metrics
   {
     id: 'vid-metrics-1',
     moduleId: 'metrics',
-    title: 'How to Track the North Star Metric',
-    description: 'Avoid vanity stats and build metrics tracking actual customer value and retention.',
-    duration: '12:05',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAk7q0vqSw6ZPeiaWaG5MH-E70plN0sFoplxXUnHpQes6Oqw8MSEWy9Zhhwg81M0HAbsV6qY8RWZVqwiScxFTcu7VtQWv7fFFeFEOiqrQA4LQh1Ko49CaJnDqaMUpq-bRyZ-2aLHo-JI_lfLt6pBfaRzixXy5Q50MEC-LTZZPn0UDCmxzPiDYFA7nLn4MND2WPihz88D7VoaLD5rzpuqzSIMAs2WdKhgqgj_u03OBR5qgiCyGBOudQbUt-eXgeLGgEsr354K5p7xCg',
-    author: 'ProductMetrics Academy',
-    summary: 'Why click-counts are lie-metrics. Learn how to map user flow diagrams, track active participant retention cohorts, and define input metrics that feed your primary North Star business metric.',
-    youtubeId: 'N1_S7XmBv5U'
+    title: 'Product Metrics & Metric Trees',
+    description: 'Building KPI trees to decompose high-level business goals into actionable product metrics.',
+    duration: '11:50',
+    imageUrl: 'https://img.youtube.com/vi/BRdIcy9_3-Q/hqdefault.jpg',
+    author: 'HelloPM',
+    summary: 'Learn how to map product metric trees. This video covers breaking down North Star metrics into input metrics, isolating leading indicators, and aligning product work with top-line goals.',
+    youtubeId: 'BRdIcy9_3-Q'
+  },
+  {
+    id: 'vid-metrics-2',
+    moduleId: 'metrics',
+    title: 'North Star Metric Explained',
+    description: 'How to define, track, and align your entire organization around a single North Star Metric.',
+    duration: '08:35',
+    imageUrl: 'https://img.youtube.com/vi/3-S_Vn-1Y8A/hqdefault.jpg',
+    author: 'Product School',
+    summary: 'A guide to the North Star Metric. Understand the relationship between customer value, business strategy, and product engagement, and how to define a sticky North Star metric.',
+    youtubeId: '3-S_Vn-1Y8A'
   }
 ];
 
