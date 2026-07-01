@@ -2277,7 +2277,7 @@ export default function App() {
             <div className="space-y-6 max-w-4xl">
               <div className="pb-3 border-b border-[#becbb1]">
                 <h2 className="text-2xl font-black text-[#1a1c1c]">Your Learner Profile Settings</h2>
-                <p className="text-xs text-[#3f4a36] font-medium mt-1">Review your score details, manage cloud-sync integrations, and set up your authenticated profile.</p>
+                <p className="text-xs text-[#3f4a36] font-medium mt-1">Review your study statistics and workspace settings.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2304,167 +2304,20 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 2. Supabase Auth Integration */}
-                <div className="bg-white rounded-2xl border border-[#becbb1] p-6 space-y-4 h-fit">
-                  <h3 className="text-sm font-black uppercase tracking-wider text-[#1e5000] mb-2 flex items-center gap-1.5 justify-between">
-                    <span>☁️ Supabase Cloud Sync</span>
-                    {isSupabaseConfigured && (
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${user ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                        {user ? 'Cloud Synced' : 'Offline Mode'}
-                      </span>
-                    )}
-                  </h3>
-
-                  {!isSupabaseConfigured ? (
-                    <div className="bg-amber-50 rounded-2xl border-2 border-amber-200 p-4 space-y-3">
-                      <p className="text-xs text-amber-900 font-semibold leading-relaxed">
-                        🌐 <strong>Local-First Sandbox Mode Enabled</strong>
-                      </p>
-                      <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                        Your study progress (XP, Streak, Completed Concepts) is backup-saved on this browser's local cache!
-                      </p>
-                      <p className="text-[11px] text-amber-900 leading-relaxed font-bold font-sans">
-                        To activate cloud-sync authentication database backups, deploy to Vercel and supply your environment credentials.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 font-sans">
-                      {user ? (
-                        <div className="space-y-4">
-                          <div className="bg-emerald-50 text-emerald-950 rounded-xl p-4 border border-emerald-200 text-xs font-semibold leading-relaxed space-y-1">
-                            <p className="text-[13px] font-bold text-emerald-950">✓ Successfully Connected to Cloud</p>
-                            <p className="font-medium text-emerald-800">Account Mailbox: <strong className="underline text-emerald-950">{user.email}</strong></p>
-                            <p className="font-medium text-emerald-800">Your XP details are live-synced instantly behind the scenes.</p>
-                          </div>
-                          <button 
-                            onClick={handleSignOut}
-                            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs py-3 rounded-xl transition-all border border-slate-300 shadow-sm cursor-pointer"
-                          >
-                            Disconnect Account & Log Out
-                          </button>
-                        </div>
-                      ) : (
-                        <form onSubmit={handleAuthSubmit} className="space-y-3">
-                          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                            <button
-                              type="button"
-                              onClick={() => { setAuthMode('login'); setAuthError(null); }}
-                              className={`flex-1 text-center py-2 text-xs font-bold rounded-md transition-all ${authMode === 'login' ? 'bg-white text-slate-800 shadow animate-fade-in' : 'text-slate-500 hover:text-slate-800'}`}
-                            >
-                              Log In
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setAuthMode('signup'); setAuthError(null); }}
-                              className={`flex-1 text-center py-2 text-xs font-bold rounded-md transition-all ${authMode === 'signup' ? 'bg-white text-slate-800 shadow animate-fade-in' : 'text-slate-500 hover:text-slate-800'}`}
-                            >
-                              Sign Up
-                            </button>
-                          </div>
-
-                          {authError && (
-                            <div className="bg-rose-50 text-rose-800 rounded-xl p-3 border border-rose-200 text-[11px] font-extrabold leading-relaxed">
-                              {authError}
-                            </div>
-                          )}
-
-                          <div className="space-y-2">
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
-                              <input 
-                                type="email"
-                                value={authEmail}
-                                onChange={(e) => setAuthEmail(e.target.value)}
-                                placeholder="enter your email..."
-                                className="w-full bg-slate-50 p-2.5 text-xs rounded-lg border border-[#becbb1] text-slate-800 focus:outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Secure Password</label>
-                              <input 
-                                type="password"
-                                value={authPassword}
-                                onChange={(e) => setAuthPassword(e.target.value)}
-                                placeholder="******"
-                                className="w-full bg-slate-50 p-2.5 text-xs rounded-lg border border-[#becbb1] text-slate-800 focus:outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={authLoading}
-                            className={`w-full text-white font-extrabold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1 bg-[#2b6c00] hover:bg-[#1e5000] cursor-pointer`}
-                          >
-                            <span>{authLoading ? 'Authorising...' : authMode === 'signup' ? 'Create Registered Account (+ Merge Sync)' : 'Log In to Cloud Workspace'}</span>
-                            {isSyncing && <span>⚡</span>}
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  )}
-
+                {/* 2. Coming Soon Experience */}
+                <div className="bg-white rounded-2xl border border-[#becbb1] p-6 space-y-4 h-fit flex flex-col items-center text-center justify-center py-8">
+                  <div className="w-12 h-12 bg-[#58cc02]/10 rounded-full flex items-center justify-center text-[#2b6c00] mb-2">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      cloud_sync
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black uppercase tracking-wider text-[#1e5000]">Profile Settings – Coming Soon</h3>
+                  <p className="text-[11px] text-slate-500 font-medium font-sans max-w-sm leading-relaxed">
+                    Cloud sync, multi-device backup, and profile management will be available in a future release. Your study progress continues to save automatically to your local browser storage.
+                  </p>
                 </div>
+
               </div>
-
-              {/* 3. Vercel & Supabase Developer Integration Guide Column Dashboard */}
-              <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 space-y-4">
-                <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
-                  <div>
-                    <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
-                      <span className="text-lg">⚡</span> Easy Vercel Deployment & Supabase Bootstrap Guide
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium font-sans mt-0.5">Learn how to instantly deploy this lightweight, highly optimized PMPrepares app to Vercel static hosting!</p>
-                  </div>
-                  <span className="text-xs font-black uppercase px-2.5 py-1 bg-slate-900 border border-slate-700 text-white rounded-md shrink-0">100% Vercel Ready</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700 leading-relaxed font-sans">
-                  
-                  {/* Step 1: Environment Setup */}
-                  <div className="bg-white p-5 rounded-xl border border-slate-200 space-y-3">
-                    <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="bg-slate-900 text-white text-[10px] w-4.5 h-4.5 rounded-full inline-flex items-center justify-center">1</span> Add Vercel Environment Variables
-                    </h4>
-                    <p className="font-medium text-slate-600 font-sans">
-                      When deploying to your Vercel Dashboard, go to <strong>Project Settings &gt; Environment Variables</strong>, and configure:
-                    </p>
-                    <div className="bg-slate-900 text-slate-100 rounded-lg p-3 font-mono text-[10px] select-all space-y-1 leading-normal">
-                      <p className="text-pink-400">VITE_SUPABASE_URL<span className="text-slate-400">="your_project_url"</span></p>
-                      <p className="text-pink-400">VITE_SUPABASE_ANON_KEY<span className="text-slate-400">="your_anon_public_key"</span></p>
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-medium font-sans">
-                      * Vite automatically bundles environment parameters starting with the prefix <code>VITE_</code> directly into output code during asset generation.
-                    </p>
-                  </div>
-
-                  {/* Step 2: Supabase database setup */}
-                  <div className="bg-white p-5 rounded-xl border border-slate-200 space-y-3 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="bg-slate-900 text-white text-[10px] w-4.5 h-4.5 rounded-full inline-flex items-center justify-center">2</span> Generate PostgreSQL Tables
-                      </h4>
-                      <p className="font-medium text-slate-600 font-sans">
-                        Copy and paste the schema trigger code below directly into your Supabase project's <strong>SQL Editor</strong> to configure row-level security (RLS), tables, policies, and links.
-                      </p>
-                    </div>
-                    
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(SUPABASE_BOOTSTRAP_SQL);
-                        setCopySuccess(true);
-                        triggerNotification("📋 SQL Copied to Clipboard!", "Run it in Supabase's SQL Editor immediately.");
-                        setTimeout(() => setCopySuccess(false), 2500);
-                      }}
-                      className={`w-full py-3 font-bold text-xs rounded-xl flex items-center justify-center gap-2 border transition-all cursor-pointer ${copySuccess ? 'bg-emerald-500 text-white border-emerald-600 shadow' : 'bg-slate-900 hover:bg-black text-white border-slate-800 shadow-sm'}`}
-                    >
-                      <span>{copySuccess ? '✓ Copied SQL Schema' : '📋 Copy Supabase SQL Bootstrap Code'}</span>
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-
             </div>
           )}
 
